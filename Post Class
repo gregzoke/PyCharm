@@ -1,0 +1,92 @@
+
+
+#::::::::::::::::Related application(app.py):::::::::::::::::::::::::
+
+# #::::::::::::::::::::::::::::::Version3:::::::::::::::::::::::::::::::
+#
+# from database import Database
+# from models.post import Post
+#
+# Database.initialize()
+#
+# post = Post(blog_id="123",
+#             title="Another great post",
+#             content="This is some sample content",
+#             author="Greg")
+#
+# post.save_to_mongo()
+#
+#
+# # Used the below to print out post of a known id (copied from mongodb terminal)
+# # Database.initialize()
+# #
+# # post = Post.from_mongo('1511a5130643c414baa5b2fd6e0d9ffe9')
+# #
+# # print(post)
+
+
+
+# =::::::::::::::::::Version 3::::::::::::::::::::::
+# :::::::::::::::::::Post Class:::::::::::::::::::::::
+import uuid
+import datetime
+from database import Database
+
+
+class Post(object):
+
+    def _init_(self, blog_id, title, content, author, date=datetime.datetime.utcnow(), id=None): # you could add default values as well
+          self.blog_id = blog_id
+          self.title = title
+          self.content = content
+          self.author = author
+          self.created_date = date
+          self.id = uuid.uuid4().hex if id is None else id  #to generate automated id if it does not exist
+
+        # had we wanted to use default values for the above, we would have done the following
+        # Just for example: post = Post(blog_id="123", title="a title,", content="some content", author="Greg")
+
+    def save_to_mongo(self):
+        Database.insert(collection='posts',
+                        data=self.jason())
+
+
+
+    def jason(self):
+        return {
+            'id': self.id,
+            'blog_id': self.blog_id,
+            'author': self.author,
+            'content': self.content,
+            'title': self.title,
+            'created_date': self.created_date
+        }
+    # @staticmethod:::::::::::::::::We decided to use "cls" (below) later
+    # def from_mongo(id):
+    #     return Database.find_one(collection='posts', query={'id': id})
+
+    @classmethod
+    def from_mongo(cls, id):
+        post_data = Database.find_one(collection='post', query={'id': id})
+        return cls(blog_id=post_data['blog_id'],
+                   title=post_data['title'],
+                   content=post_data['content'],
+                   author=post_data['author'],
+                   date=post_data['id'],
+                   id=post_data['id'])
+
+
+    @staticmethod
+    def from_blog(id):
+        return [post for post in Database.find(collection='posts', query={'blog_id': id})]
+        
+        
+        
+        
+        
+        #::::::::::::::::::::::::::The error on runtime:::::::::::::::::::::::::::::::::
+        
+        
+"post = Post(blog_id="123",
+
+TypeError: Post() takes no arguments"
